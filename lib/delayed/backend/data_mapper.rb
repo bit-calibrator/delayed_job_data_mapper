@@ -8,10 +8,15 @@ module Delayed
 
         storage_names[:default] = 'delayed_jobs'
 
+        HANDLER_SIZE_TINY = 255
+        HANDLER_SIZE_DEFAULT = 65535
+        HANDLER_SIZE_MEDIUM = 16777215
+        HANDLER_SIZE_LARGE = 4294967295
+
         property :id,          Serial
         property :priority,    Integer,   :default => 0,  :index => :run_at_priority
         property :attempts,    Integer,   :default => 0
-        property :handler,     Text,      :lazy => false
+        property :handler,     Text,      :lazy => false, :length => HANDLER_SIZE_MEDIUM
         property :run_at,      DateTime,  :index => :run_at_priority
         property :locked_at,   DateTime,  :index => true, :lazy => false
         property :locked_by,   Text,      :lazy => false
@@ -38,7 +43,7 @@ module Delayed
           ) &
           (
             all(:locked_at => nil) | # never locked
-            all(:locked_at.lt => Time.at(now.to_i - max_run_time.to_i).utc) # expired
+            all(:locked_at.lt => Time.at(now.to_time.to_i - max_run_time.to_i).utc) # expired
           )
         end
 
